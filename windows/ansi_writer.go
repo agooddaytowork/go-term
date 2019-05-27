@@ -5,7 +5,6 @@ package windowsconsole
 import (
 	"io"
 	"os"
-
 	ansiterm "github.com/mxseba/go-term/windows/ansiterm"
 	"github.com/mxseba/go-term/windows/ansiterm/winterm"
 )
@@ -18,22 +17,21 @@ type ansiWriter struct {
 	command        []byte
 	escapeSequence []byte
 	inAnsiSequence bool
-	parser         *ansiterm.AnsiParser
+	parser		   *ansiterm.AnsiParser
 }
 
 // NewAnsiWriter returns an io.Writer that provides VT100 terminal emulation on top of a
 // Windows console output handle.
-func NewAnsiWriter(nFile int) io.Writer {
+func NewAnsiWriter(nFile int) (io.Writer, ansiterm.AnsiEventHandler) {
 //	initLogger()
 	file, fd := winterm.GetStdFile(nFile)
 	info, err := winterm.GetConsoleScreenBufferInfo(fd)
 	if err != nil {
-		return nil
+		return nil, nil
 	}
-
-	parser := ansiterm.CreateParser("Ground", winterm.CreateWinEventHandler(fd, file))
-//	logger.Infof("newAnsiWriter: parser %p", parser)
-
+	handler := winterm.CreateWinEventHandler(fd, file)
+	parser := ansiterm.CreateParser("Ground", handler)
+	
 	aw := &ansiWriter{
 		file:           file,
 		fd:             fd,
@@ -42,10 +40,7 @@ func NewAnsiWriter(nFile int) io.Writer {
 		escapeSequence: []byte(ansiterm.KEY_ESC_CSI),
 		parser:         parser,
 	}
-
-//	logger.Infof("newAnsiWriter: aw.parser %p", aw.parser)
-//	logger.Infof("newAnsiWriter: %v", aw)
-	return aw
+	return aw, handler
 }
 
 func (aw *ansiWriter) Fd() uintptr {

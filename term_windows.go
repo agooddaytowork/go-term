@@ -23,11 +23,9 @@ type Winsize struct {
 
 // StdStreams returns the standard streams (stdin, stdout, stderr).
 func StdStreams() (stdIn io.ReadCloser, stdOut, stdErr io.Writer) {
-	
-	stdIn = windowsconsole.NewAnsiReader(syscall.STD_INPUT_HANDLE)
-	stdOut = windowsconsole.NewAnsiWriter(syscall.STD_OUTPUT_HANDLE)
-	stdErr = windowsconsole.NewAnsiWriter(syscall.STD_ERROR_HANDLE)
-	
+	stdOut, handler := windowsconsole.NewAnsiWriter(syscall.STD_OUTPUT_HANDLE)
+	stdErr, _ = windowsconsole.NewAnsiWriter(syscall.STD_ERROR_HANDLE)
+	stdIn = windowsconsole.NewAnsiReader(syscall.STD_INPUT_HANDLE, handler)
 	return
 }
 

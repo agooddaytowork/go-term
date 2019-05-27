@@ -63,6 +63,8 @@ func getInts(params []string, minCount int, dflt int) []int {
 
 func (ap *AnsiParser) modeDispatch(param string, set bool) error {
 	switch param {
+	case "?1":
+		return ap.eventHandler.DECCKM(set)
 	case "?3":
 		return ap.eventHandler.DECCOLM(set)
 	case "?6":

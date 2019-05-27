@@ -15,10 +15,6 @@ import (
 	"github.com/mxseba/go-term/windows/ansiterm/winterm"
 )
 
-const (
-	escapeSequence = ansiterm.KEY_ESC_CSI
-)
-
 // ansiReader wraps a standard input file (e.g., os.Stdin) providing ANSI sequence translation.
 type ansiReader struct {
 	file     *os.File
@@ -26,11 +22,12 @@ type ansiReader struct {
 	buffer   []byte
 	cbBuffer int
 	command  []byte
+	handler  ansiterm.AnsiEventHandler
 }
 
 // NewAnsiReader returns an io.ReadCloser that provides VT100 terminal emulation on top of a
 // Windows console input handle.
-func NewAnsiReader(nFile int) io.ReadCloser {
+func NewAnsiReader(nFile int, handler ansiterm.AnsiEventHandler) io.ReadCloser {
 //	initLogger()
 	file, fd := winterm.GetStdFile(nFile)
 	return &ansiReader{
@@ -38,6 +35,7 @@ func NewAnsiReader(nFile int) io.ReadCloser {
 		fd:      fd,
 		command: make([]byte, 0, ansiterm.ANSI_MAX_CMD_LENGTH),
 		buffer:  make([]byte, 0),
+		handler: handler,
 	}
 }
 
@@ -83,6 +81,13 @@ func (ar *ansiReader) Read(p []byte) (int, error) {
 		return 0, nil
 	}
 
+	var escapeSequence string
+	if ar.handler.GetKeyMode() == true {
+		escapeSequence = ansiterm.KEY_ESC_O
+	} else {
+		escapeSequence = ansiterm.KEY_ESC_CSI
+	}
+	
 	keyBytes := translateKeyEvents(events, []byte(escapeSequence))
 
 	// Save excess bytes and right-size keyBytes

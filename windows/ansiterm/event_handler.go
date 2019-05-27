@@ -45,6 +45,9 @@ type AnsiEventHandler interface {
 
 	// 132 Column Mode
 	DECCOLM(bool) error
+	
+	// Cursor Keys Mode
+	DECCKM(bool) error
 
 	// Erase in Display
 	ED(int) error
@@ -87,4 +90,6 @@ type AnsiEventHandler interface {
 
 	// Flush updates from previous commands
 	Flush() error
+	
+	GetKeyMode() bool
 }

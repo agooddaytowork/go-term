@@ -21,6 +21,7 @@ type windowsAnsiEventHandler struct {
 	wrapNext       bool
 	drewMarginByte bool
 	originMode     bool
+	cursorKeyMode  bool
 	marginRune     rune
 	curInfo        *CONSOLE_SCREEN_BUFFER_INFO
 	curPos         COORD
@@ -47,6 +48,7 @@ func CreateWinEventHandler(fd uintptr, file *os.File, opts ...Option) ansiterm.A
 		infoReset:  infoReset,
 		attributes: infoReset.Attributes,
 	}
+	
 	for _, o := range opts {
 		o(h)
 	}
@@ -443,6 +445,15 @@ func (h *windowsAnsiEventHandler) DECCOLM(use132 bool) error {
 	return SetConsoleCursorPosition(h.fd, COORD{0, 0})
 }
 
+func (h *windowsAnsiEventHandler) DECCKM(enable bool) error {
+	if err := h.Flush(); err != nil {
+		return err
+	}
+	h.cursorKeyMode	= enable
+	return nil
+}
+
+
 func (h *windowsAnsiEventHandler) ED(param int) error {
 	if err := h.Flush(); err != nil {
 		return err
@@ -739,4 +750,8 @@ func (h *windowsAnsiEventHandler) updatePos(pos COORD) {
 func (h *windowsAnsiEventHandler) clearWrap() {
 	h.wrapNext = false
 	h.drewMarginByte = false
+}
+
+func (h *windowsAnsiEventHandler) GetKeyMode() bool {
+	return h.cursorKeyMode
 }
